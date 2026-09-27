@@ -12,6 +12,8 @@ public:
     G4CADSplitter() = default;
 
     // Returns {positive-side shape, negative-side shape} relative to the plane normal direction.
+    // If one side has no geometry, that entry is an empty compound shape.
+    // Geometry exactly on the plane may appear in both outputs.
     std::pair<TopoDS_Shape, TopoDS_Shape> Split(const TopoDS_Shape& shape, const gp_Pln& plane) const;
 };
 

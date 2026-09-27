@@ -6,10 +6,12 @@
 #include <BRepAlgoAPI_Common.hxx>
 #include <BRepBndLib.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
+#include <BRep_Builder.hxx>
 #include <BRepPrimAPI_MakeHalfSpace.hxx>
 #include <Bnd_Box.hxx>
 #include <Precision.hxx>
 #include <TopoDS_Face.hxx>
+#include <TopoDS_Compound.hxx>
 #include <TopoDS_Shape.hxx>
 #include <TopoDS_Solid.hxx>
 #include <gp_Pln.hxx>
@@ -99,6 +101,14 @@ PlaneBounds ComputePlaneBounds(const TopoDS_Shape& shape, const gp_Pln& plane)
     };
 }
 
+TopoDS_Shape MakeEmptyCompound()
+{
+    TopoDS_Compound compound;
+    BRep_Builder builder;
+    builder.MakeCompound(compound);
+    return compound;
+}
+
 } // namespace
 
 std::pair<TopoDS_Shape, TopoDS_Shape> G4CADSplitter::Split(const TopoDS_Shape& shape, const gp_Pln& plane) const
@@ -119,15 +129,24 @@ std::pair<TopoDS_Shape, TopoDS_Shape> G4CADSplitter::Split(const TopoDS_Shape& s
 
     BRepAlgoAPI_Common positiveCommon(shape, positiveHalfSpace);
     positiveCommon.Build();
-    if (!positiveCommon.IsDone()) {
+    if (!positiveCommon.IsDone() || positiveCommon.HasErrors()) {
         throw std::runtime_error("Failed to build positive half split shape");
     }
 
     BRepAlgoAPI_Common negativeCommon(shape, negativeHalfSpace);
     negativeCommon.Build();
-    if (!negativeCommon.IsDone()) {
+    if (!negativeCommon.IsDone() || negativeCommon.HasErrors()) {
         throw std::runtime_error("Failed to build negative half split shape");
     }
 
-    return {positiveCommon.Shape(), negativeCommon.Shape()};
+    TopoDS_Shape positiveShape = positiveCommon.Shape();
+    TopoDS_Shape negativeShape = negativeCommon.Shape();
+    if (positiveShape.IsNull()) {
+        positiveShape = MakeEmptyCompound();
+    }
+    if (negativeShape.IsNull()) {
+        negativeShape = MakeEmptyCompound();
+    }
+
+    return {positiveShape, negativeShape};
 }
