@@ -3,7 +3,8 @@
 
 #include <utility>
 
-class TopoDS_Shape;
+#include <TopoDS_Shape.hxx>
+
 class gp_Pln;
 
 class G4CADSplitter {
