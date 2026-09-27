@@ -1,6 +1,5 @@
 #include "G4CADSplitter.hh"
 
-#include <cmath>
 #include <stdexcept>
 
 #include <BRepAlgoAPI_Common.hxx>
@@ -18,7 +17,7 @@
 
 namespace {
 
-Standard_Real ComputeExtent(const TopoDS_Shape& shape)
+Standard_Real ComputeExtent(const TopoDS_Shape& shape, const gp_Pln& plane)
 {
     Bnd_Box box;
     BRepBndLib::Add(shape, box);
@@ -34,11 +33,22 @@ Standard_Real ComputeExtent(const TopoDS_Shape& shape)
     Standard_Real zmax = 0.0;
     box.Get(xmin, ymin, zmin, xmax, ymax, zmax);
 
-    const Standard_Real dx = xmax - xmin;
-    const Standard_Real dy = ymax - ymin;
-    const Standard_Real dz = zmax - zmin;
-    const Standard_Real diagonal = std::sqrt(dx * dx + dy * dy + dz * dz);
-    return diagonal > Precision::Confusion() ? diagonal * 2.0 : 1.0;
+    const gp_Pnt origin = plane.Location();
+    const gp_Pnt corners[] = {
+        gp_Pnt(xmin, ymin, zmin), gp_Pnt(xmin, ymin, zmax), gp_Pnt(xmin, ymax, zmin), gp_Pnt(xmin, ymax, zmax),
+        gp_Pnt(xmax, ymin, zmin), gp_Pnt(xmax, ymin, zmax), gp_Pnt(xmax, ymax, zmin), gp_Pnt(xmax, ymax, zmax)
+    };
+
+    Standard_Real maxDistance = 0.0;
+    for (const gp_Pnt& corner : corners) {
+        const Standard_Real distance = origin.Distance(corner);
+        if (distance > maxDistance) {
+            maxDistance = distance;
+        }
+    }
+
+    const Standard_Real margin = 10.0 * Precision::Confusion();
+    return maxDistance > Precision::Confusion() ? maxDistance + margin : 1.0;
 }
 
 } // namespace
@@ -49,7 +59,7 @@ std::pair<TopoDS_Shape, TopoDS_Shape> G4CADSplitter::Split(const TopoDS_Shape& s
         throw std::invalid_argument("Cannot split a null TopoDS_Shape");
     }
 
-    const Standard_Real extent = ComputeExtent(shape);
+    const Standard_Real extent = ComputeExtent(shape, plane);
     const TopoDS_Face splitFace = BRepBuilderAPI_MakeFace(plane, -extent, extent, -extent, extent).Face();
 
     const gp_Vec normal(plane.Axis().Direction());
