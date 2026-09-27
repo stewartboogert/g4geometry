@@ -11,6 +11,7 @@ class G4CADSplitter {
 public:
     G4CADSplitter() = default;
 
+    // Returns {positive-side shape, negative-side shape} relative to the plane normal direction.
     std::pair<TopoDS_Shape, TopoDS_Shape> Split(const TopoDS_Shape& shape, const gp_Pln& plane) const;
 };
 
