@@ -129,13 +129,13 @@ std::pair<TopoDS_Shape, TopoDS_Shape> G4CADSplitter::Split(const TopoDS_Shape& s
 
     BRepAlgoAPI_Common positiveCommon(shape, positiveHalfSpace);
     positiveCommon.Build();
-    if (!positiveCommon.IsDone() || positiveCommon.HasErrors()) {
+    if (!positiveCommon.IsDone()) {
         throw std::runtime_error("Failed to build positive half split shape");
     }
 
     BRepAlgoAPI_Common negativeCommon(shape, negativeHalfSpace);
     negativeCommon.Build();
-    if (!negativeCommon.IsDone() || negativeCommon.HasErrors()) {
+    if (!negativeCommon.IsDone()) {
         throw std::runtime_error("Failed to build negative half split shape");
     }
 
