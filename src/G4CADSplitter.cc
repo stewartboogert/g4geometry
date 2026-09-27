@@ -4,7 +4,6 @@
 #include <stdexcept>
 
 #include <BRepAlgoAPI_Common.hxx>
-#include <BRepAlgoAPI_Splitter.hxx>
 #include <BRepBndLib.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepPrimAPI_MakeHalfSpace.hxx>
